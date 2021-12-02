@@ -47,6 +47,7 @@ dependencies = [
  "hyper",
  "pretty_env_logger",
  "tokio",
+ "tokio-util",
 ]
 
 [[package]]

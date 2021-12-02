@@ -1,34 +1,60 @@
 #![deny(warnings)]
 
-use std::convert::Infallible;
+use tokio::fs::File;
+
+use tokio_util::codec::{BytesCodec, FramedRead};
 
 use hyper::service::{make_service_fn, service_fn};
-use hyper::{Body, Request, Response, Server};
+use hyper::{Body, Method, Request, Response, Result, Server, StatusCode};
 
-async fn hello(_: Request<Body>) -> Result<Response<Body>, Infallible> {
-    Ok(Response::new(Body::from("Hello World!")))
-}
+static INDEX: &str = "files/demo.html";
+static NOTFOUND: &[u8] = b"Not Found";
 
 #[tokio::main]
-pub async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
+async fn main() {
     pretty_env_logger::init();
 
-    // For every connection, we must make a `Service` to handle all
-    // incoming HTTP requests on said connection.
-    let make_svc = make_service_fn(|_conn| {
-        // This is the `Service` that will handle the connection.
-        // `service_fn` is a helper to convert a function that
-        // returns a Response into a `Service`.
-        async { Ok::<_, Infallible>(service_fn(hello)) }
-    });
+    let address = "127.0.0.1:30000".parse().unwrap();
 
-    let address = ([127, 0, 0, 1], 30000).into();
+    let make_service =
+        make_service_fn(|_| async { Ok::<_, hyper::Error>(service_fn(response_examples)) });
 
-    let server = Server::bind(&address).serve(make_svc);
+    let server = Server::bind(&address).serve(make_service);
 
     println!("Listening on http://{}", address);
 
-    server.await?;
+    if let Err(e) = server.await {
+        eprintln!("server error: {}", e);
+    }
+}
 
-    Ok(())
+async fn response_examples(req: Request<Body>) -> Result<Response<Body>> {
+    match (req.method(), req.uri().path()) {
+        (&Method::GET, "/") | (&Method::GET, "/index.html") => simple_file_send(INDEX).await,
+        (&Method::GET, "/docs") => send_json().await,
+        _ => Ok(not_found()),
+    }
+}
+
+/// HTTP status code 404
+fn not_found() -> Response<Body> {
+    Response::builder()
+        .status(StatusCode::NOT_FOUND)
+        .body(NOTFOUND.into())
+        .unwrap()
+}
+
+async fn send_json() -> Result<Response<Body>> {
+    let body = Body::from("['test1','test2','test3']");
+    Ok(Response::new(body))
+}
+
+async fn simple_file_send(filename: &str) -> Result<Response<Body>> {
+    if let Ok(file) = File::open(filename).await {
+        let stream = FramedRead::new(file, BytesCodec::new());
+        let body = Body::wrap_stream(stream);
+        return Ok(Response::new(body));
+    }
+
+    Ok(not_found())
 }
