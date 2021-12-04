@@ -41,16 +41,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c4872d67bab6358e59559027aa3b9157c53d9358c51423c17554809a8858e0f8"
 
 [[package]]
-name = "cargo-demo"
-version = "0.1.0"
-dependencies = [
- "hyper",
- "pretty_env_logger",
- "tokio",
- "tokio-util",
-]
-
-[[package]]
 name = "cfg-if"
 version = "1.0.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -433,6 +423,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e51e73328dc4ac0c7ccbda3a494dfa03df1de2f46018127f60c693f2648455b0"
 dependencies = [
  "libc",
+]
+
+[[package]]
+name = "skeditor-server"
+version = "0.1.0"
+dependencies = [
+ "hyper",
+ "pretty_env_logger",
+ "tokio",
+ "tokio-util",
 ]
 
 [[package]]
