@@ -49,15 +49,27 @@ fn not_found() -> Response<Body> {
 }
 
 async fn send_json() -> Result<Response<Body>> {
-    let body = Body::from("['test1','test2','test3']");
-    Ok(Response::new(body))
+    let body = Body::from("[\"test1\",\"test2\",\"test3\"]");
+    Ok(
+        Response::builder()
+            .header("Access-Control-Allow-Origin", "*")
+            .header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS")
+            .body(body)
+            .unwrap()
+    )
 }
 
 async fn simple_file_send(filename: &str) -> Result<Response<Body>> {
     if let Ok(file) = File::open(filename).await {
         let stream = FramedRead::new(file, BytesCodec::new());
         let body = Body::wrap_stream(stream);
-        return Ok(Response::new(body));
+        return Ok(
+            Response::builder()
+                .header("Access-Control-Allow-Origin", "*")
+                .header("Access-Control-Allow-Methods", "PUT,POST,GET,DELETE,OPTIONS")
+                .body(body)
+                .unwrap()
+        );
     }
 
     Ok(not_found())
