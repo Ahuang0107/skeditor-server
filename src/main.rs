@@ -7,7 +7,9 @@ use tokio_util::codec::{BytesCodec, FramedRead};
 use hyper::service::{make_service_fn, service_fn};
 use hyper::{Body, Method, Request, Response, Result, Server, StatusCode};
 
-static INDEX: &str = "files/demo.html";
+static TEST1: &str = "files/test1.sketch";
+static TEST2: &str = "files/test2.sketch";
+static TEST3: &str = "files/test3.sketch";
 static NOTFOUND: &[u8] = b"Not Found";
 
 #[tokio::main]
@@ -30,7 +32,9 @@ async fn main() {
 
 async fn response_examples(req: Request<Body>) -> Result<Response<Body>> {
     match (req.method(), req.uri().path()) {
-        (&Method::GET, "/") | (&Method::GET, "/index.html") => simple_file_send(INDEX).await,
+        (&Method::GET, "/docs/test1") => simple_file_send(TEST1).await,
+        (&Method::GET, "/docs/test2") => simple_file_send(TEST2).await,
+        (&Method::GET, "/docs/test3") => simple_file_send(TEST3).await,
         (&Method::GET, "/docs") => send_json().await,
         _ => Ok(not_found()),
     }
